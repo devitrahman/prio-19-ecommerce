@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Admin Panel | Prio 19ツ</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="brand-mark">P</span><span>Prio 19ツ<small>Admin Panel</small></span></a>
+    <span class="demo-badge">DEMO · Backend not connected</span>
+  </header>
+
+  <main class="wrap">
+    <section class="notice" role="status">
+      <strong>গুরুত্বপূর্ণ: এটি এখন প্রাথমিক ডেমো।</strong>
+      <p>এই পেজে পণ্যের পরিবর্তন শুধু এই ব্রাউজারের Local Storage-এ থাকে। এখনো নিরাপদ Admin Login, সার্ভার Database বা অর্ডার সংরক্ষণ চালু হয়নি। বাস্তব দোকানে ব্যবহারের আগে Backend যুক্ত করতে হবে।</p>
+    </section>
+
+    <section class="page-heading">
+      <div><p class="eyebrow">STORE MANAGEMENT</p><h1>অ্যাডমিন ড্যাশবোর্ড</h1><p class="muted">পণ্যের তালিকা দেখুন, নতুন পণ্য যোগ করুন বা তথ্য পরিবর্তন করুন।</p></div>
+      <a class="secondary-btn" href="index.html">ওয়েবসাইট দেখুন ↗</a>
+    </section>
+
+    <section class="stats">
+      <article class="stat-card"><span>মোট পণ্য</span><strong id="totalProducts">0</strong></article>
+      <article class="stat-card"><span>স্টকে থাকা পণ্য</span><strong id="inStockProducts">0</strong></article>
+      <article class="stat-card"><span>অর্ডার</span><strong>—</strong><small>Backend সংযুক্ত হলে দেখা যাবে</small></article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading"><div><h2 id="formTitle">নতুন পণ্য যোগ করুন</h2><p class="muted">নাম, ক্যাটাগরি, দাম ও স্টক লিখুন।</p></div></div>
+      <form id="productForm" class="product-form">
+        <input type="hidden" id="productId">
+        <label>পণ্যের নাম<input id="name" required maxlength="100" placeholder="যেমন: ক্যাজুয়াল টি-শার্ট"></label>
+        <label>ক্যাটাগরি<input id="category" required maxlength="60" placeholder="যেমন: ফ্যাশন"></label>
+        <label>দাম (৳)<input id="price" type="number" required min="0" step="1" placeholder="450"></label>
+        <label>স্টক সংখ্যা<input id="stock" type="number" required min="0" step="1" placeholder="10"></label>
+        <label>ইমোজি / চিহ্ন<input id="emoji" maxlength="8" placeholder="📦"></label>
+        <label>ছোট বিবরণ<input id="desc" maxlength="180" placeholder="পণ্যের বিবরণ"></label>
+        <div class="form-actions"><button class="primary-btn" type="submit" id="saveBtn">পণ্য যোগ করুন</button><button class="secondary-btn hidden" type="button" id="cancelEdit">বাতিল</button></div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="list-heading"><div><h2>পণ্যের তালিকা</h2><p class="muted">এখানকার তথ্য এই ব্রাউজারে সংরক্ষিত হয়।</p></div><input id="filter" class="filter" type="search" placeholder="পণ্য খুঁজুন…"></div>
+      <div class="table-wrap"><table><thead><tr><th>পণ্য</th><th>ক্যাটাগরি</th><th>দাম</th><th>স্টক</th><th>কাজ</th></tr></thead><tbody id="productRows"></tbody></table></div>
+      <p id="emptyState" class="empty hidden">কোনো পণ্য পাওয়া যায়নি। উপরের ফর্ম দিয়ে পণ্য যোগ করুন।</p>
+      <div class="bottom-actions"><button id="resetDemo" class="danger-btn" type="button">ডেমো পণ্যের তালিকা রিসেট</button></div>
+    </section>
+    <p class="footer-note">Prio 19ツ · Admin preview. নিরাপদ লগইন ও স্থায়ী ডেটাবেস পরের ধাপে যুক্ত হবে।</p>
+  </main>
+  <script src="admin.js"></script>
+</body>
+</html>
