@@ -16,21 +16,21 @@ function saveCart(){localStorage.setItem("prio19_cart",JSON.stringify(cart));ren
 function updateCount(){$("cartCount").textContent=cart.reduce((sum,item)=>sum+item.qty,0);}
 function renderProducts(){
  const query=$("searchInput").value.trim().toLowerCase();
- const filtered=products.filter(p=>(activeCategory==="সব"||p.category===activeCategory)&&(p.name.toLowerCase().includes(query)||p.category.toLowerCase().includes(query)||p.desc.toLowerCase().includes(query)));
+ const filtered=products.filter(p=>(activeCategory==="সব"||p.category===activeCategory)&&(p.name.toLowerCase().includes(query)||p.category.toLowerCase().includes(query)||String(p.desc || p.description || "").toLowerCase().includes(query)));
  $("resultCount").textContent=filtered.length+"টি পণ্য";
  $("productGrid").innerHTML=filtered.length?filtered.map(p=>`<article class="product-card"><div class="product-art">${p.image_url?`<img src="${p.image_url}" alt="${p.name}" style="width:100%;height:100%;object-fit:contain">`:`<span>${p.emoji||"🛍️"}</span>`}${p.tag?`<span class="product-tag">${p.tag}</span>`:""}</div><h3>${p.name}</h3><p class="product-desc">${p.description||p.desc||""}</p><div class="product-bottom"><span class="price">${money(p.price)}</span><button class="add-btn" data-add="${p.id}">＋ কার্টে</button></div></article>`).join(""):`<div class="empty">কোনো পণ্য পাওয়া যায়নি। অন্য নামে খুঁজুন।</div>`;
 }
 function renderCart(){
  const items=$("cartItems");
  if(!cart.length){items.innerHTML='<div class="empty">🛒<br>আপনার কার্ট এখনো খালি।</div>';}
- else items.innerHTML=cart.map(item=>{const p=products.find(x=>x.id===item.id);return `<div class="cart-row"><div class="cart-emoji">${p.emoji}</div><div><h4>${p.name}</h4><small>${money(p.price)} × ${item.qty}</small><div class="qty"><button data-qty="-1" data-id="${p.id}">−</button><b>${item.qty}</b><button data-qty="1" data-id="${p.id}">＋</button></div></div><button class="remove" data-remove="${p.id}">মুছুন</button></div>`}).join("");
- $("cartTotal").textContent=money(cart.reduce((sum,item)=>sum+products.find(p=>p.id===item.id).price*item.qty,0));
+ else items.innerHTML=cart.map(item=>{const p=products.find(x=>String(x.id)===String(item.id));if(!p)return "";return `<div class="cart-row"><div class="cart-emoji">${p.emoji||"🛍️"}</div><div><h4>${p.name}</h4><small>${money(p.price)} × ${item.qty}</small><div class="qty"><button data-qty="-1" data-id="${p.id}">−</button><b>${item.qty}</b><button data-qty="1" data-id="${p.id}">＋</button></div></div><button class="remove" data-remove="${p.id}">মুছুন</button></div>`}).join("");
+ $("cartTotal").textContent=money(cart.reduce((sum,item)=>sum+products.find(p=>String(p.id)===String(item.id)).price*item.qty,0));
 }
 function openCart(){$("overlay").classList.remove("hidden");$("cartDrawer").classList.add("open");}
 function closePanels(){$("overlay").classList.add("hidden");$("cartDrawer").classList.remove("open");$("checkoutModal").classList.add("hidden");}
 let toastTimer;function toast(msg){const el=$("toast");el.textContent=msg;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2300);}
-$("productGrid").addEventListener("click",e=>{const btn=e.target.closest("[data-add]");if(!btn)return;const id=Number(btn.dataset.add);const item=cart.find(x=>x.id===id);item?item.qty++:cart.push({id,qty:1});saveCart();toast("পণ্যটি কার্টে যোগ হয়েছে");});
-$("cartItems").addEventListener("click",e=>{const q=e.target.closest("[data-qty]"),r=e.target.closest("[data-remove]");if(r)cart=cart.filter(x=>x.id!==Number(r.dataset.remove));if(q){const item=cart.find(x=>x.id===Number(q.dataset.id));item.qty+=Number(q.dataset.qty);if(item.qty<=0)cart=cart.filter(x=>x.id!==item.id);}saveCart();});
+$("productGrid").addEventListener("click",e=>{const btn=e.target.closest("[data-add]");if(!btn)return;const id=String(btn.dataset.add);const item=cart.find(x=>String(x.id)===id);item?item.qty++:cart.push({id,qty:1});saveCart();toast("পণ্যটি কার্টে যোগ হয়েছে");});
+$("cartItems").addEventListener("click",e=>{const q=e.target.closest("[data-qty]"),r=e.target.closest("[data-remove]");if(r)cart=cart.filter(x=>x.id!==Number(r.dataset.remove));if(q){const item=cart.find(x=>String(x.id)===q.dataset.id);item.qty+=Number(q.dataset.qty);if(item.qty<=0)cart=cart.filter(x=>x.id!==item.id);}saveCart();});
 $("categories").addEventListener("click",e=>{const b=e.target.closest("[data-category]");if(!b)return;activeCategory=b.dataset.category;document.querySelectorAll("[data-category]").forEach(x=>x.classList.toggle("active",x===b));renderProducts();});
 $("searchForm").addEventListener("submit",e=>{e.preventDefault();renderProducts();});
 $("searchInput").addEventListener("input",renderProducts);
@@ -51,6 +51,19 @@ $("checkoutForm").addEventListener("submit",e=>{
  cart=[];saveCart();e.target.reset();
 });
 $("year").textContent=new Date().getFullYear();renderProducts();renderCart();updateCount();
+(async function loadStoreProducts(){
+ try {
+  const client=window.supabase.createClient("https://ecofcxvsqoqostiaoovw.supabase.co","sb_publishable_qqG2hvIe19FC5Tohtj62sA_vvjasLSN");
+  const result=await client.from("products").select("id,name,category,price,description,image_url,stock,active").eq("active",true).order("created_at",{ascending:false});
+  if(result.error) throw result.error;
+  products=(result.data||[]).map(p=>({...p,id:String(p.id),price:Number(p.price),emoji:"🛍️",desc:p.description||"",tag:""}));
+  renderProducts();renderCart();updateCount();
+ } catch(error) {
+  console.error("Supabase products:",error);
+  $("productGrid").innerHTML='<div class="empty">পণ্য লোড হয়নি। Supabase permission / RLS পরীক্ষা করুন।</div>';
+  $("resultCount").textContent="";
+ }
+})();
 (async function loadStoreProducts(){
  try{
   const db=window.supabase.createClient("https://ecofcxvsqoqostiaoovw.supabase.co","sb_publishable_qqG2hvIe19FC5Tohtj62sA_vvjasLSN");
