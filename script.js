@@ -25,7 +25,7 @@ function renderFeaturedSections(){
  $("newGrid").innerHTML=productCards(newest,"নতুন");
 }
 function normalizeSearchText(value){
- return String(value||"").toLowerCase().normalize("NFKC").replace(/[‐‑‒–—]/g,"-").replace(/[^\\p{L}\\p{N}]+/gu," ").trim();
+ return String(value||"").toLowerCase().normalize("NFKC").replace(/[‐‑‒–—]/g,"-").replace(/[^\p{L}\p{N}]+/gu," ").trim();
 }
 function renderProducts(){
  const rawQuery=$("searchInput").value.trim();
@@ -54,7 +54,7 @@ function renderProducts(){
   return categoryMatch&&matches;
  });
  $("resultCount").textContent=filtered.length+"টি পণ্য";
- $("productGrid").innerHTML=filtered.length?productCards(filtered):'<div class="empty">কোনো পণ্য পাওয়া যায়নি। অন্য নামে খুঁজুন।';
+ $("productGrid").innerHTML=filtered.length?productCards(filtered):'<div class="empty">কোনো পণ্য পাওয়া যায়নি। অন্য নামে খুঁজুন।</div>';
  renderFeaturedSections();
 }
 function renderCart(){
