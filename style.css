@@ -90,3 +90,23 @@ footer{background:#f1f5ef;border-top:1px solid #e4eae2;padding:40px 20px}
 @media(prefers-reduced-motion:reduce){
  *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
+
+/* Ensure the all-products collection heading remains visible */
+.collection-heading{
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  position:relative;
+  z-index:1;
+  min-height:64px;
+  scroll-margin-top:150px;
+}
+.collection-heading > div,
+.collection-heading .eyebrow,
+.collection-heading h2,
+.collection-heading #resultCount{
+  visibility:visible !important;
+  opacity:1 !important;
+}
+.collection-heading h2{display:block;color:var(--ink,#173d2e)}
+#productGrid{display:grid;min-height:40px}
