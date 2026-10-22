@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>পণ্যের বিস্তারিত | Prio 19ツ</title>
+<link rel="stylesheet" href="style.css?v=20261022d">
+<style>
+.detail-wrap{max-width:1100px;margin:32px auto;padding:0 20px}
+.back-link{display:inline-block;margin-bottom:20px;color:var(--green);font-weight:600;text-decoration:none}
+.detail-card{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:36px;align-items:start;background:#fff;border:1px solid var(--line);border-radius:22px;padding:24px}
+.detail-image{min-height:360px;display:grid;place-items:center;background:var(--cream);border-radius:18px;overflow:hidden;font-size:110px;color:var(--muted)}
+.detail-image img{width:100%;height:100%;max-height:480px;object-fit:contain}
+.detail-info h1{font-size:32px;line-height:1.35;margin:8px 0 12px}
+.detail-category{color:var(--green);font-weight:600;font-size:13px}
+.detail-price{font-size:28px;font-weight:700;color:var(--green);margin:16px 0}
+.detail-description{line-height:1.9;color:var(--muted);white-space:pre-wrap}
+.detail-stock{font-weight:600;margin:14px 0}
+.detail-stock.out-of-stock{color:#b42318}
+.quantity-row{display:flex;align-items:center;gap:12px;margin:18px 0}
+.quantity-row input{width:90px;padding:10px;border:1px solid var(--line);border-radius:9px}
+.detail-add{border:0;background:var(--green);color:#fff;border-radius:10px;padding:13px 20px;font-weight:700}
+.detail-add:disabled{background:#e5e7eb;color:#6b7280;cursor:not-allowed}
+.detail-message{padding:14px;border-radius:10px;background:var(--mint);color:var(--green);margin-top:16px;line-height:1.7}
+@media(max-width:720px){.detail-wrap{margin:18px auto;padding:0 12px}.detail-card{grid-template-columns:1fr;gap:22px;padding:14px}.detail-image{min-height:240px;font-size:80px}.detail-info h1{font-size:25px}}
+</style>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="index.html"><span class="brand-mark">P</span><span>Prio 19ツ<small>সবকিছু, এক জায়গায়</small></span></a>
+<a class="cart-button" href="index.html#products">← কেনাকাটায় ফিরুন</a>
+</header>
+<main class="detail-wrap">
+<a class="back-link" href="index.html#products">← সব পণ্যে ফিরে যান</a>
+<div id="detailState" class="detail-message">পণ্যের তথ্য লোড হচ্ছে...</div>
+<section id="detailCard" class="detail-card" hidden>
+<div id="detailImage" class="detail-image"></div>
+<div class="detail-info">
+<div id="detailCategory" class="detail-category"></div>
+<h1 id="detailName"></h1>
+<div id="detailPrice" class="detail-price"></div>
+<p id="detailDescription" class="detail-description"></p>
+<p id="detailStock" class="detail-stock"></p>
+<div class="quantity-row"><label for="quantity">পরিমাণ:</label><input id="quantity" type="number" min="1" value="1" step="1"></div>
+<button id="addDetailToCart" class="detail-add">🛒 কার্টে যোগ করুন</button>
+<div id="detailMessage" class="detail-message" hidden></div>
+</div>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+const SUPABASE_URL="https://ecofcxvsqoqostiaoovw.supabase.co";
+const SUPABASE_KEY="sb_publishable_qqG2hvIe19FC5Tohtj62sA_vvjasLSN";
+const $=id=>document.getElementById(id);
+const money=n=>"৳"+Number(n).toLocaleString("en-US");
+const escapeHTML=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let product=null;
+const id=new URLSearchParams(location.search).get("id");
+function showError(message){$("detailState").hidden=false;$("detailState").textContent=message;$("detailCard").hidden=true;}
+function showMessage(message){$("detailMessage").hidden=false;$("detailMessage").textContent=message;}
+async function load(){
+ if(!id){showError("পণ্যটি পাওয়া যায়নি। হোমপেজ থেকে আবার পণ্য বেছে নিন।");return;}
+ try{
+  const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  const {data,error}=await client.from("products").select("id,name,category,price,description,image_url,stock,active").eq("id",id).eq("active",true).maybeSingle();
+  if(error)throw error;
+  if(!data){showError("এই পণ্যটি পাওয়া যায়নি বা বর্তমানে বিক্রির জন্য নেই।");return;}
+  product=data;
+  document.title=data.name+" | Prio 19ツ";
+  $("detailCategory").textContent=data.category||"পণ্য";
+  $("detailName").textContent=data.name||"পণ্যের নাম";
+  $("detailPrice").textContent=money(data.price);
+  $("detailDescription").textContent=data.description||"এই পণ্যের বিস্তারিত বিবরণ এখনো যোগ করা হয়নি।";
+  $("detailImage").innerHTML=data.image_url?'<img src="'+escapeHTML(data.image_url)+'" alt="'+escapeHTML(data.name)+'">':"🛍️";
+  const stock=Number(data.stock||0);
+  $("detailStock").textContent=stock>0?"স্টকে আছে: "+stock+"টি":"স্টকে নেই";
+  $("detailStock").classList.toggle("out-of-stock",stock<=0);
+  $("quantity").max=Math.max(stock,1);
+  $("addDetailToCart").disabled=stock<=0;
+  if(stock<=0)$("addDetailToCart").textContent="স্টকে নেই";
+  $("detailState").hidden=true;
+  $("detailCard").hidden=false;
+ }catch(error){console.error(error);showError("পণ্যের তথ্য লোড হয়নি। ইন্টারনেট সংযোগ বা ডাটাবেস সেটিং পরীক্ষা করুন।");}
+}
+$("addDetailToCart").addEventListener("click",function(){
+ if(!product)return;
+ const stock=Number(product.stock||0);
+ const qty=Number($("quantity").value);
+ if(!Number.isInteger(qty)||qty<1){showMessage("অনুগ্রহ করে ১ বা তার বেশি সঠিক পরিমাণ লিখুন।");return;}
+ if(qty>stock){showMessage("স্টকে সর্বোচ্চ "+stock+"টি আছে।");return;}
+ let cart=[];try{cart=JSON.parse(localStorage.getItem("prio19_cart")||"[]");if(!Array.isArray(cart))cart=[];}catch(_){cart=[];}
+ const item=cart.find(x=>String(x.id)===String(product.id));
+ if(item){if(Number(item.qty)+qty>stock){showMessage("কার্টে থাকা পরিমাণসহ স্টকের বেশি যোগ করা যাবে না।");return;}item.qty=Number(item.qty)+qty;}
+ else cart.push({id:String(product.id),qty:qty});
+ localStorage.setItem("prio19_cart",JSON.stringify(cart));
+ showMessage(qty+"টি পণ্য কার্টে যোগ হয়েছে। হোমপেজে ফিরে কার্ট থেকে অর্ডার সম্পন্ন করুন।");
+});
+load();
+})();
+</script>
+</body>
+</html>
