@@ -62,7 +62,7 @@ $("year").textContent=new Date().getFullYear();renderProducts();renderCart();upd
   renderProducts();renderCart();updateCount();
  } catch(error) {
   console.error("Supabase products:",error);
-  $("productGrid").innerHTML='<div class="empty">পণ্য লোড হয়নি। Console-এ Supabase error দেখুন।</div>';
+  $("productGrid").innerHTML='<div class="empty">পণ্য লোড হয়নি। কারণ: '+String(error && error.message ? error.message : error).replace(/[&<>"]/g, function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];})+'</div>';
   $("resultCount").textContent="";
  }
 })();
