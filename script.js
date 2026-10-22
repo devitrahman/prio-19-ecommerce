@@ -37,18 +37,32 @@ $("searchInput").addEventListener("input",renderProducts);
 $("cartOpen").addEventListener("click",openCart);$("cartClose").addEventListener("click",closePanels);$("overlay").addEventListener("click",closePanels);
 $("checkoutOpen").addEventListener("click",()=>{if(!cart.length){toast("আগে কার্টে পণ্য যোগ করুন");return;}closePanels();$("checkoutModal").classList.remove("hidden");$("overlay").classList.remove("hidden");});
 $("checkoutClose").addEventListener("click",closePanels);
-$("checkoutForm").addEventListener("submit",e=>{
- e.preventDefault();if(!cart.length)return;
- const data=new FormData(e.target);const orderId="P19-"+Date.now().toString().slice(-7);
- const lines=cart.map(item=>{const p=products.find(x=>x.id===item.id);return `${p.name} × ${item.qty} = ${money(p.price*item.qty)}`;}).join("\n");
- const total=cart.reduce((s,item)=>s+products.find(p=>p.id===item.id).price*item.qty,0);
- const message=`Prio 19ツ - নতুন অর্ডার\nঅর্ডার: ${orderId}\nনাম: ${data.get("customer")}\nফোন: ${data.get("phone")}\nঠিকানা: ${data.get("address")}\nপেমেন্ট: ${data.get("payment")}\n\nপণ্য:\n${lines}\n\nমোট: ${money(total)}\n\nনোট: অনলাইন পেমেন্ট নির্বাচন করলে পেমেন্ট গেটওয়ে সেটআপ না হওয়া পর্যন্ত টাকা পাঠাবেন না।`;
- closePanels();toast("অর্ডারের বিবরণ তৈরি হয়েছে");
- // Replace 9665XXXXXXXX with the shop's WhatsApp number in script.js before publishing.
- const shopWhatsApp="9665XXXXXXXX";
- if(!shopWhatsApp.includes("X")){window.open("https://wa.me/"+shopWhatsApp+"?text="+encodeURIComponent(message),"_blank");}
- else {const blob=new Blob([message],{type:"text/plain;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=orderId+".txt";a.click();URL.revokeObjectURL(a.href);alert("অর্ডারের বিবরণ ফাইল হিসেবে সেভ হয়েছে। লাইভ অর্ডার পেতে script.js-এ আপনার WhatsApp নম্বর বসান।");}
- cart=[];saveCart();e.target.reset();
+$("checkoutForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ if(!cart.length){toast("আগে কার্টে পণ্য যোগ করুন");return;}
+ const form=e.target;
+ const submit=form.querySelector('button[type="submit"]');
+ submit.disabled=true;
+ try{
+  const data=new FormData(form);
+  const items=cart.map(item=>({id:String(item.id),qty:Number(item.qty)}));
+  const client=window.supabase.createClient("https://ecofcxvsqoqostiaoovw.supabase.co","sb_publishable_qqG2hvIe19FC5Tohtj62sA_vvjasLSN");
+  const {data:orderId,error}=await client.rpc("create_store_order",{
+   p_customer_name:String(data.get("customer")||"").trim(),
+   p_phone:String(data.get("phone")||"").trim(),
+   p_address:String(data.get("address")||"").trim(),
+   p_payment_method:String(data.get("payment")||"Cash on Delivery"),
+   p_items:items
+  });
+  if(error) throw error;
+  cart=[];saveCart();form.reset();closePanels();
+  toast("অর্ডার সফল! অর্ডার নম্বর: "+String(orderId).slice(0,8));
+  const result=await client.from("products").select("id,name,category,price,description,image_url,stock,active,created_at").eq("active",true).order("created_at",{ascending:false});
+  if(!result.error){products=(result.data||[]).map(p=>({...p,id:String(p.id),price:Number(p.price),emoji:"🛍️",desc:p.description||"",tag:""}));renderProducts();renderCart();updateCount();}
+ }catch(error){
+  console.error("Order save error:",error);
+  toast("অর্ডার সেভ হয়নি: "+String(error.message||error));
+ }finally{submit.disabled=false;}
 });
 $("year").textContent=new Date().getFullYear();renderProducts();renderCart();updateCount();
 
