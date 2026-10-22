@@ -51,25 +51,18 @@ $("checkoutForm").addEventListener("submit",e=>{
  cart=[];saveCart();e.target.reset();
 });
 $("year").textContent=new Date().getFullYear();renderProducts();renderCart();updateCount();
+
 (async function loadStoreProducts(){
  try {
+  if (!window.supabase || !window.supabase.createClient) throw new Error("Supabase library not loaded");
   const client=window.supabase.createClient("https://ecofcxvsqoqostiaoovw.supabase.co","sb_publishable_qqG2hvIe19FC5Tohtj62sA_vvjasLSN");
-  const result=await client.from("products").select("id,name,category,price,description,image_url,stock,active").eq("active",true).order("created_at",{ascending:false});
+  const result=await client.from("products").select("id,name,category,price,description,image_url,stock,active,created_at").eq("active",true).order("created_at",{ascending:false});
   if(result.error) throw result.error;
   products=(result.data||[]).map(p=>({...p,id:String(p.id),price:Number(p.price),emoji:"🛍️",desc:p.description||"",tag:""}));
   renderProducts();renderCart();updateCount();
  } catch(error) {
   console.error("Supabase products:",error);
-  $("productGrid").innerHTML='<div class="empty">পণ্য লোড হয়নি। Supabase permission / RLS পরীক্ষা করুন।</div>';
+  $("productGrid").innerHTML='<div class="empty">পণ্য লোড হয়নি। Console-এ Supabase error দেখুন।</div>';
   $("resultCount").textContent="";
  }
-})();
-(async function loadStoreProducts(){
- try{
-  const db=window.supabase.createClient("https://ecofcxvsqoqostiaoovw.supabase.co","sb_publishable_qqG2hvIe19FC5Tohtj62sA_vvjasLSN");
-  const {data,error}=await db.from("products").select("id,name,category,price,description,image_url,stock,active").eq("active",true).order("created_at",{ascending:false});
-  if(error) throw error;
-  products=(data||[]).map(p=>({...p,id:String(p.id),price:Number(p.price),emoji:"🛍️",desc:p.description||"",tag:""}));
-  renderProducts();renderCart();updateCount();
- }catch(err){console.error("Supabase product loading error:",err);$("productGrid").innerHTML='<div class="empty">পণ্য লোড করা যায়নি। ডেটাবেসের অনুমতি পরীক্ষা করুন।</div>';$("resultCount").textContent="";}
 })();
