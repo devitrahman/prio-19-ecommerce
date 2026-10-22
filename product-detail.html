@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>পণ্যের বিস্তারিত | Prio 19ツ</title>
-<link rel="stylesheet" href="style.css?v=20261022d">
+<link rel="stylesheet" href="style.css?v=20261022e">
 <style>
 .detail-wrap{max-width:1100px;margin:32px auto;padding:0 20px}
 .back-link{display:inline-block;margin-bottom:20px;color:var(--green);font-weight:600;text-decoration:none}
@@ -23,6 +23,7 @@
 .detail-add:disabled{background:#e5e7eb;color:#6b7280;cursor:not-allowed}
 .detail-message{padding:14px;border-radius:10px;background:var(--mint);color:var(--green);margin-top:16px;line-height:1.7}
 @media(max-width:720px){.detail-wrap{margin:18px auto;padding:0 12px}.detail-card{grid-template-columns:1fr;gap:22px;padding:14px}.detail-image{min-height:240px;font-size:80px}.detail-info h1{font-size:25px}}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -81,7 +82,7 @@ async function load(){
   if(stock<=0)$("addDetailToCart").textContent="স্টকে নেই";
   $("detailState").hidden=true;
   $("detailCard").hidden=false;
- }catch(error){console.error(error);showError("পণ্যের তথ্য লোড হয়নি। ইন্টারনেট সংযোগ বা ডাটাবেস সেটিং পরীক্ষা করুন।");}
+ }catch(error){console.error("Product detail load error:",error);showError("পণ্যের তথ্য লোড হয়নি। কারণ: "+String(error&&error.message?error.message:error));}
 }
 $("addDetailToCart").addEventListener("click",function(){
  if(!product)return;
