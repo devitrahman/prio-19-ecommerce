@@ -24,11 +24,37 @@ function renderFeaturedSections(){
  $("popularGrid").innerHTML=productCards(popular,"জনপ্রিয়");
  $("newGrid").innerHTML=productCards(newest,"নতুন");
 }
+function normalizeSearchText(value){
+ return String(value||"").toLowerCase().normalize("NFKC").replace(/[‐‑‒–—]/g,"-").replace(/[^\\p{L}\\p{N}]+/gu," ").trim();
+}
 function renderProducts(){
- const query=$("searchInput").value.trim().toLowerCase();
- const filtered=products.filter(p=>(activeCategory==="সব"||p.category===activeCategory)&&(String(p.name||"").toLowerCase().includes(query)||String(p.category||"").toLowerCase().includes(query)||String(p.desc||p.description||"").toLowerCase().includes(query)));
+ const rawQuery=$("searchInput").value.trim();
+ const query=normalizeSearchText(rawQuery);
+ const aliases={
+  "টি শার্ট":["t shirt","t-shirt","tshirt","tee","t shirts","t-shirts","টিশার্ট","টি শার্ট","টি-শার্ট"],
+  "হেডফোন":["headphone","headphones","wireless headphone","earphone","হেডফোন"],
+  "স্নিকার্স":["sneaker","sneakers","shoes","shoe","জুতা","স্নিকার্স"],
+  "স্কিন কেয়ার":["skincare","skin care","beauty","স্কিন কেয়ার"],
+  "ঘড়ি":["watch","smartwatch","smart watch","ঘড়ি"],
+  "মগ":["mug","coffee mug","কফি মগ"],
+  "ব্যাকপ্যাক":["backpack","bag","ব্যাগ"],
+  "সানগ্লাস":["sunglasses","sun glasses","চশমা"]
+ };
+ const expanded=[query];
+ for(const [key,terms] of Object.entries(aliases)){
+  if(terms.some(term=>normalizeSearchText(term)===query)||normalizeSearchText(key)===query){
+   expanded.push(normalizeSearchText(key),...terms.map(normalizeSearchText));
+  }
+ }
+ const filtered=products.filter(p=>{
+  const categoryMatch=activeCategory==="সব"||p.category===activeCategory;
+  const searchable=normalizeSearchText([p.name,p.category,p.desc,p.description,p.search_terms,p.english_name].filter(Boolean).join(" "));
+  const matches=!query||expanded.some(term=>term&&searchable.includes(term))||
+   (query.includes("t shirt")&&normalizeSearchText(p.name).includes("টি শার্ট"));
+  return categoryMatch&&matches;
+ });
  $("resultCount").textContent=filtered.length+"টি পণ্য";
- $("productGrid").innerHTML=filtered.length?productCards(filtered):'<div class="empty">কোনো পণ্য পাওয়া যায়নি। অন্য নামে খুঁজুন।</div>';
+ $("productGrid").innerHTML=filtered.length?productCards(filtered):'<div class="empty">কোনো পণ্য পাওয়া যায়নি। অন্য নামে খুঁজুন।';
  renderFeaturedSections();
 }
 function renderCart(){
