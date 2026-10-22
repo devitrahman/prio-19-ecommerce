@@ -1,4 +1,4 @@
-const products = [
+let products = [
  {id:1,name:"ক্যাজুয়াল টি-শার্ট",category:"ফ্যাশন",price:450,emoji:"👕",desc:"প্রতিদিনের আরামদায়ক পোশাক",tag:"জনপ্রিয়"},
  {id:2,name:"ওয়্যারলেস হেডফোন",category:"ইলেকট্রনিক্স",price:1250,emoji:"🎧",desc:"গান ও কলের জন্য",tag:"নতুন"},
  {id:3,name:"স্পোর্টস স্নিকার্স",category:"ফ্যাশন",price:1890,emoji:"👟",desc:"হালকা ও আরামদায়ক",tag:""},
@@ -18,7 +18,7 @@ function renderProducts(){
  const query=$("searchInput").value.trim().toLowerCase();
  const filtered=products.filter(p=>(activeCategory==="সব"||p.category===activeCategory)&&(p.name.toLowerCase().includes(query)||p.category.toLowerCase().includes(query)||p.desc.toLowerCase().includes(query)));
  $("resultCount").textContent=filtered.length+"টি পণ্য";
- $("productGrid").innerHTML=filtered.length?filtered.map(p=>`<article class="product-card"><div class="product-art"><span>${p.emoji}</span>${p.tag?`<span class="product-tag">${p.tag}</span>`:""}</div><h3>${p.name}</h3><p class="product-desc">${p.desc}</p><div class="product-bottom"><span class="price">${money(p.price)}</span><button class="add-btn" data-add="${p.id}">＋ কার্টে</button></div></article>`).join(""):`<div class="empty">কোনো পণ্য পাওয়া যায়নি। অন্য নামে খুঁজুন।</div>`;
+ $("productGrid").innerHTML=filtered.length?filtered.map(p=>`<article class="product-card"><div class="product-art">${p.image_url?`<img src="${p.image_url}" alt="${p.name}" style="width:100%;height:100%;object-fit:contain">`:`<span>${p.emoji||"🛍️"}</span>`}${p.tag?`<span class="product-tag">${p.tag}</span>`:""}</div><h3>${p.name}</h3><p class="product-desc">${p.description||p.desc||""}</p><div class="product-bottom"><span class="price">${money(p.price)}</span><button class="add-btn" data-add="${p.id}">＋ কার্টে</button></div></article>`).join(""):`<div class="empty">কোনো পণ্য পাওয়া যায়নি। অন্য নামে খুঁজুন।</div>`;
 }
 function renderCart(){
  const items=$("cartItems");
@@ -51,3 +51,12 @@ $("checkoutForm").addEventListener("submit",e=>{
  cart=[];saveCart();e.target.reset();
 });
 $("year").textContent=new Date().getFullYear();renderProducts();renderCart();updateCount();
+(async function loadStoreProducts(){
+ try{
+  const db=window.supabase.createClient("https://ecofcxvsqoqostiaoovw.supabase.co","sb_publishable_qqG2hvIe19FC5Tohtj62sA_vvjasLSN");
+  const {data,error}=await db.from("products").select("id,name,category,price,description,image_url,stock,active").eq("active",true).order("created_at",{ascending:false});
+  if(error) throw error;
+  products=(data||[]).map(p=>({...p,id:String(p.id),price:Number(p.price),emoji:"🛍️",desc:p.description||"",tag:""}));
+  renderProducts();renderCart();updateCount();
+ }catch(err){console.error("Supabase product loading error:",err);$("productGrid").innerHTML='<div class="empty">পণ্য লোড করা যায়নি। ডেটাবেসের অনুমতি পরীক্ষা করুন।</div>';$("resultCount").textContent="";}
+})();
