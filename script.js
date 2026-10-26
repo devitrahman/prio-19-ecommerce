@@ -84,7 +84,7 @@ $("checkoutForm").addEventListener("submit",async e=>{
  try{
   const data=new FormData(form);
   const items=cart.map(item=>({id:String(item.id),qty:Number(item.qty)}));
-  const client=window.supabase.createClient("https://ecofcxvsqoqostiaoovw.supabase.co","sb_publishable_qqG2hvIe19FC5Tohtj62sA_vvjasLSN");
+  const client=window.supabase.createClient("https://ecofcxvsqoqostiaoovw.supabase.co","");
   const {data:orderId,error}=await client.rpc("create_store_order",{
    p_customer_name:String(data.get("customer")||"").trim(),
    p_phone:String(data.get("phone")||"").trim(),
@@ -107,7 +107,7 @@ $("year").textContent=new Date().getFullYear();renderProducts();renderCart();upd
 (async function loadStoreProducts(){
  try {
   if (!window.supabase || !window.supabase.createClient) throw new Error("Supabase library not loaded");
-  const client=window.supabase.createClient("https://ecofcxvsqoqostiaoovw.supabase.co","sb_publishable_qqG2hvIe19FC5Tohtj62sA_vvjasLSN");
+  const client=window.supabase.createClient("https://ecofcxvsqoqostiaoovw.supabase.co","");
   const result=await client.from("products").select("id,name,category,price,description,image_url,stock,active,created_at").eq("active",true).order("created_at",{ascending:false});
   if(result.error) throw result.error;
   products=(result.data||[]).map(p=>({...p,id:String(p.id),price:Number(p.price),emoji:"🛍️",desc:p.description||"",tag:""}));
